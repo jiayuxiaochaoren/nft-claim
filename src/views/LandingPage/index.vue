@@ -9,8 +9,8 @@ It has long been paying attention to the development trends in these fields and 
         DNUDAO贡献者 银色NFT
       </div>
       <div class="btn-group">
-        <button class="btn" v-if="!address" style="background-color: gray!important;">Mint</button>
-        <button class="btn" v-if="address" @click="mint()">Mint</button>
+        <button class="btn" v-if="!address || process" style="background-color: gray!important;">{{btnText}}</button>
+        <button class="btn" v-if="address && !process" @click="mint()">Mint</button>
       </div>
     </div>
   </div>
@@ -24,6 +24,8 @@ export default {
       address: null,
       chainId: null,
       tokenId: null,
+      process:false,
+      btnText:"Mint",
       tokenIds: [],
       images: [],
       approved: false,
@@ -52,25 +54,12 @@ export default {
       old_info[self.address] = address_info
       localStorage.setItem(JSON.stringify(old_info))
     },
-    
-    async checkAllowance() {
-      let self = this
-      if (!this.web3) return ;
-      const allowance = await this.dddd.methods.allowance( this.address, self.dnu_address).call()
-      const allowanceBN = new this.web3.utils.BN(allowance)
-      const required = new this.web3.utils.BN(this.web3.utils.toWei('10000'))
-     
-      if (required.lt(allowanceBN)) {
-        this.approved = true
-      } else {
-        this.approved = false
-      }
-      console.log('allowance', allowance)
-    },
     /**
      * @description mint a nft
      */
     mint() {
+      this.btnText = "waiting..."
+      this.process = true
       let self = this;
         self.punk.methods
           .mint()
@@ -82,13 +71,15 @@ export default {
               message: "Mint Success",
               type: "success",
             });
+            self.btnText = "Success"
             console.log(receipt);
           })
           .on("error", function (error, receipt) {
             self.$message({
-              message: error,
+              message: "mint error",
               type: "error",
             });
+             self.process = false
           });
       
     },
